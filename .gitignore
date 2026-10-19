@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Environment files: never commit real values, commit .env.example instead
+.env
+.env.test
+
+# SQLite database files
+*.db
+
+# Generated Prisma client (generated in src/generated/prisma/, so match at any depth)
+**/generated/prisma
+
+# Build and test output
+dist/
+coverage/
+
+# Editor and OS files
+.DS_Store
+.vscode/
