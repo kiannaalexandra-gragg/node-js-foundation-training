@@ -18,3 +18,7 @@ coverage/
 # Editor and OS files
 .DS_Store
 .vscode/
+
+# M03 generated files: the ~100 MB log and the CLI's default report. Regenerate them.
+modules/m03-nodejs-runtime-npm/data/
+modules/m03-nodejs-runtime-npm/report.json
