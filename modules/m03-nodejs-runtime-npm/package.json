@@ -1,0 +1,17 @@
+{
+  "name": "m03-nodejs-runtime-npm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "M03: a log-report CLI that streams a large log file, and a bare node:http server",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "generate-log": "node src/log-report/generate-log.js",
+    "report": "node src/log-report/log-report.js",
+    "serve": "node --env-file-if-exists=.env src/http-server/server.js",
+    "dev": "node --watch --env-file-if-exists=.env src/http-server/server.js",
+    "check": "node src/log-report/aggregate.check.js && node src/log-report/log-report.check.js && node src/http-server/server.check.js"
+  }
+}
