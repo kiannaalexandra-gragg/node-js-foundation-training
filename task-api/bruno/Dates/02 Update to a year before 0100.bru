@@ -1,0 +1,26 @@
+meta {
+  name: 02 Update to a year before 0100
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/tasks/{{dateId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  { "dueDate": "0050-06-15" }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  // A real calendar date, and four digits is the ISO 8601 year. v2 rejected years 0000 to 0099 by accident.
+  test("stores the due date as 0050-06-15T00:00:00.000Z", function () {
+    expect(res.body.dueDate).to.equal("0050-06-15T00:00:00.000Z");
+  });
+}

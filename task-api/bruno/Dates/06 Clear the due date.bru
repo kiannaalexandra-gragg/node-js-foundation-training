@@ -1,0 +1,25 @@
+meta {
+  name: 06 Clear the due date
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/tasks/{{dateId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  { "dueDate": null }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("clears it to null", function () {
+    expect(res.body.dueDate).to.equal(null);
+  });
+}

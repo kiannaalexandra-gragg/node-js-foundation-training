@@ -1,0 +1,25 @@
+meta {
+  name: 28 Get a well-formed id that is not an RFC UUID
+  type: http
+  seq: 28
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks/11111111-1111-1111-1111-111111111111
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+  res.body.error.code: eq NOT_FOUND
+}
+
+tests {
+  // The id has the 8-4-4-4-12 shape but a version digit of 1 and a variant digit of 1, so z.uuid() would
+  // call it malformed (400). The id check is z.guid(): a well-formed id with no task is a 404, and only
+  // a malformed id (Errors/08) is a 400.
+  test("is not found, not invalid", function () {
+    expect(res.body.error.message).to.equal("Task 11111111-1111-1111-1111-111111111111 not found");
+  });
+}

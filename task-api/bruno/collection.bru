@@ -27,8 +27,11 @@ tests {
 }
 
 docs {
-  Module 5 output, updated in Module 7: the Bruno collection for the Task API.
+  Module 5 output, updated in Module 7 and Module 8: the Bruno collection for the Task API.
   Run from task-api/ with the server running: npm run bruno
   Success: Status PASS, every request passed. Tasks/ is the happy path, in order. Listing/ covers search, sorting and paging
-  (it creates its own task and deletes it). Errors/ has one request per error path.
+  (it creates its own task and deletes it). Errors/ has one request per error path, including the
+  due-date and id boundaries a schema decides. Dates/ walks one task's dueDate through the accepted
+  boundaries (leap day, year 0050 read back from SQLite, year 9999, minutes only with an offset, null)
+  and deletes it: run it in order, because its requests share the task Dates/01 makes.
 }
