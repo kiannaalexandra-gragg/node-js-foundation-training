@@ -1,4 +1,4 @@
-// Module 7 output, input types from Zod in Module 8: the task service, the Prisma-backed replacement for the M05 in-memory store.
+// Module 7 output, input types from Zod in Module 8, complete() in Module 9: the task service, the Prisma-backed replacement for the M05 in-memory store.
 // Nothing to run here. Used by the handlers. Success: tasks survive a server restart, and `npm run bruno` passes.
 import { NotFoundError } from '../errors.ts';
 import { prisma } from '../db.ts';
@@ -71,6 +71,12 @@ export const taskService = {
   async update(id: string, patch: UpdateTaskInput): Promise<Task> {
     const data = patch satisfies Prisma.TaskUpdateInput;
     return prisma.task.update({ where: { id }, data });
+  },
+
+  // Marks the task done. Like update, it does not look the task up first: an id that does not exist
+  // makes Prisma throw P2025, and the error handler turns that into a 404.
+  async complete(id: string): Promise<Task> {
+    return prisma.task.update({ where: { id }, data: { status: 'done' } });
   },
 
   async remove(id: string): Promise<void> {

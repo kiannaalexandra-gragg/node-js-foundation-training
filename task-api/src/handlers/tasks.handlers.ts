@@ -1,8 +1,9 @@
-// Module 5 output, changed in Module 7 and again in Module 8: the five task handlers (list, create, get, update, delete).
+// Module 5 output, changed in Module 7, Module 8 and Module 9: the six task handlers (list, create, get, update, complete, delete).
 // Nothing to run here. tasks.routes.ts maps URLs to them. Success: `npm run bruno` passes against a running server.
 import type { Request, Response } from 'express';
 import { validOf, type ValidLocals } from '../middleware/validate.ts';
 import type {
+  completeTaskRequest,
   createTaskRequest,
   deleteTaskRequest,
   getTaskRequest,
@@ -51,6 +52,13 @@ export async function updateTask(
   const { params, body } = validOf(res);
   // A task that does not exist makes Prisma throw P2025, which the error handler turns into a 404.
   res.status(200).json(await taskService.update(params.id, body));
+}
+
+export async function completeTask(
+  _req: Request,
+  res: Response<Task, ValidLocals<typeof completeTaskRequest>>,
+): Promise<void> {
+  res.status(200).json(await taskService.complete(validOf(res).params.id));
 }
 
 export async function deleteTask(
