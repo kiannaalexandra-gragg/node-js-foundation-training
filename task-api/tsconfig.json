@@ -13,5 +13,5 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["src", "prisma/seed.ts", "prisma7.config.ts", "scripts"]
+  "include": ["src", "tests", "prisma/seed.ts", "prisma7.config.ts", "scripts"]
 }
