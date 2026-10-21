@@ -1,0 +1,53 @@
+# Module 9 output: the CI workflow for the Task API.
+# Nothing to run here. GitHub runs it on every pull request and every push to main.
+# Success: a green check on the pull request: install, generate the Prisma client, type-check, then test with coverage.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# The workflow only reads the repo, so it gets no more than that.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # The Task API lives in task-api/, so every `run` step starts there. `uses` steps are not affected.
+    defaults:
+      run:
+        working-directory: task-api
+    # The same settings .env.test holds locally. They are fake: the test database is a throwaway file
+    # that `prisma migrate deploy` creates in the job (one per run, deleted at the end), so there is no secret to store.
+    env:
+      NODE_ENV: test
+      API_KEY: ci-test-api-key
+      DATABASE_URL: file:./test.db
+    steps:
+      - uses: actions/checkout@v7
+
+      # The Node version comes from the .nvmrc at the repo root, so CI and a laptop run the same one.
+      # better-sqlite3 is a native addon built for one Node version, so a mismatch fails every test.
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: task-api/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      # The Prisma client is generated code and is git-ignored, so a fresh checkout does not have it.
+      - name: Generate the Prisma client
+        run: npm run db:generate
+
+      # Jest only strips types, so tsc is what checks them.
+      - name: Type-check
+        run: npm run typecheck
+
+      # globalSetup gives the run its own test database and migrates it, then Jest runs the suite. The 80% coverage threshold in
+      # jest.config.js fails this step if coverage drops below it.
+      - name: Test
+        run: npm run test:coverage
