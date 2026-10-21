@@ -73,10 +73,10 @@ export const taskService = {
     return prisma.task.update({ where: { id }, data });
   },
 
-  // Marks the task done. Like update, it does not look the task up first: an id that does not exist
-  // makes Prisma throw P2025, and the error handler turns that into a 404.
+  // Marking a task done is an update of its status, so it goes through update: one place writes a task,
+  // and an id that does not exist is the same P2025 and the same 404.
   async complete(id: string): Promise<Task> {
-    return prisma.task.update({ where: { id }, data: { status: 'done' } });
+    return taskService.update(id, { status: 'done' });
   },
 
   async remove(id: string): Promise<void> {
