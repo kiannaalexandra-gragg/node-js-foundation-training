@@ -1,7 +1,8 @@
-// Module 5 output: the central error handler.
+// Module 5 output, extended in Module 7 with Prisma error codes: the central error handler.
 // Nothing to run here. Registered last in app.ts. Success: every error response has the fixed envelope, and `npm run bruno` passes.
 import type { NextFunction, Request, Response } from 'express';
-import { AppError } from '../errors.ts';
+import { AppError, ConflictError, NotFoundError } from '../errors.ts';
+import { Prisma } from '../generated/prisma/client.ts';
 import { requestIdOf } from './request-id.ts';
 
 // The one place that builds an error response. Express knows this is an error handler because it
@@ -44,10 +45,35 @@ function clientErrorStatus(err: unknown): number | undefined {
   return undefined;
 }
 
+// Prisma reports a failed query as a PrismaClientKnownRequestError with a code. Three of the codes
+// mean "the request does not fit the data", so they map to client errors. The messages are fixed:
+// Prisma's own text holds a code frame of your source and the field names, so it is never sent.
+//   P2002  a unique constraint failed (a duplicate)        -> 409 CONFLICT
+//   P2025  the record the operation needs does not exist   -> 404 NOT_FOUND
+//   P2003  a foreign key constraint failed                 -> 409 CONFLICT
+// P2003 is 409 here, not 400: the request was well-formed, and it conflicts with the rows that exist
+// (an owner that does not exist, or one that still has tasks). Any other code is a bug or an outage.
+function prismaErrorToAppError(err: Prisma.PrismaClientKnownRequestError): AppError | undefined {
+  switch (err.code) {
+    case 'P2002':
+      return new ConflictError('A record with the same unique value already exists');
+    case 'P2025':
+      return new NotFoundError('Resource not found');
+    case 'P2003':
+      return new ConflictError('The request refers to, or depends on, a record that conflicts with it');
+    default:
+      return undefined;
+  }
+}
+
 // Turns anything thrown into an AppError. Known client errors keep their meaning. Everything else
 // is a programmer error and becomes a generic 500 whose message says nothing about the cause.
 function toAppError(err: unknown): AppError {
   if (err instanceof AppError) return err;
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    const mapped = prismaErrorToAppError(err);
+    if (mapped !== undefined) return mapped;
+  }
   switch (bodyParserType(err)) {
     case 'entity.parse.failed':
       return new AppError(400, 'BAD_REQUEST', 'Request body is not valid JSON');

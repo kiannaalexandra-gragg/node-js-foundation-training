@@ -1,8 +1,9 @@
-// Module 5 output: the only file that calls listen, with graceful shutdown on SIGTERM and SIGINT.
+// Module 5 output, extended in Module 7 to close the database: the only file that calls listen, with graceful shutdown on SIGTERM and SIGINT.
 // Run from task-api/: npm run dev   (restarts on change; npm start runs it once)
 // Success: prints "Task API listening on http://localhost:3000 (development)". Ctrl+C prints "Server closed" and exits 0.
 import { app } from './app.ts';
 import { config } from './config.ts';
+import { prisma } from './db.ts';
 
 // The only file that calls listen.
 const server = app.listen(config.port, (err) => {
@@ -30,8 +31,17 @@ function shutdown(signal: string): void {
       console.error('Error while closing the server:', err);
       process.exit(1);
     }
-    console.log('Server closed');
-    process.exit(0);
+    // No request is in flight any more, so the database connection can be closed safely.
+    prisma.$disconnect().then(
+      () => {
+        console.log('Server closed');
+        process.exit(0);
+      },
+      (disconnectErr: unknown) => {
+        console.error('Error while closing the database:', disconnectErr);
+        process.exit(1);
+      },
+    );
   });
 
   // If a connection never ends, do not wait forever. unref() so this timer alone does not keep

@@ -1,9 +1,8 @@
-// Module 5 output: the five task handlers (list, create, get, update, delete).
+// Module 5 output, changed in Module 7: the five task handlers (list, create, get, update, delete).
 // Nothing to run here. tasks.routes.ts maps URLs to them. Success: `npm run bruno` passes against a running server.
 import type { Request, Response } from 'express';
-import { NotFoundError } from '../errors.ts';
-import { taskStore } from '../store/task-store.ts';
-import type { Task } from '../types/task.ts';
+import { taskService } from '../services/task-service.ts';
+import type { Task, TaskPage } from '../types/task.ts';
 import {
   parseCreateTask,
   parseListQuery,
@@ -22,11 +21,11 @@ import {
 type IdParams = { id: string };
 
 export async function listTasks(
-  req: Request<object, Task[], unknown, { status?: unknown }>,
-  res: Response<Task[]>,
+  req: Request<object, TaskPage, unknown, Record<string, unknown>>,
+  res: Response<TaskPage>,
 ): Promise<void> {
-  const { status } = parseListQuery(req.query);
-  res.status(200).json(await taskStore.list(status));
+  const query = parseListQuery(req.query);
+  res.status(200).json(await taskService.list(query));
 }
 
 export async function createTask(
@@ -34,14 +33,12 @@ export async function createTask(
   res: Response<Task>,
 ): Promise<void> {
   const input = parseCreateTask(req.body);
-  res.status(201).json(await taskStore.create(input));
+  res.status(201).json(await taskService.create(input));
 }
 
 export async function getTask(req: Request<IdParams, Task>, res: Response<Task>): Promise<void> {
   const id = parseTaskId(req.params.id);
-  const task = await taskStore.get(id);
-  if (task === undefined) throw new NotFoundError(`Task ${id} not found`);
-  res.status(200).json(task);
+  res.status(200).json(await taskService.get(id));
 }
 
 export async function updateTask(
@@ -50,14 +47,12 @@ export async function updateTask(
 ): Promise<void> {
   const id = parseTaskId(req.params.id);
   const patch = parseUpdateTask(req.body);
-  const task = await taskStore.update(id, patch);
-  if (task === undefined) throw new NotFoundError(`Task ${id} not found`);
-  res.status(200).json(task);
+  // A task that does not exist makes Prisma throw P2025, which the error handler turns into a 404.
+  res.status(200).json(await taskService.update(id, patch));
 }
 
 export async function deleteTask(req: Request<IdParams>, res: Response): Promise<void> {
   const id = parseTaskId(req.params.id);
-  const removed = await taskStore.remove(id);
-  if (!removed) throw new NotFoundError(`Task ${id} not found`);
+  await taskService.remove(id);
   res.sendStatus(204);
 }
