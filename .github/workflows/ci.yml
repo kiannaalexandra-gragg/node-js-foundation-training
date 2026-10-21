@@ -13,7 +13,10 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  # One job, so the repo is installed once and every step sees the same files. The name is what the pull
+  # request's checks list shows, so it says everything the job runs.
+  ci:
+    name: Install, generate, type-check, test
     runs-on: ubuntu-latest
     # The Task API lives in task-api/, so every `run` step starts there. `uses` steps are not affected.
     defaults:
