@@ -1,0 +1,58 @@
+// Module 7 output: the Prisma schema for Task API v2, translated from the M06 SQL schema.
+// Nothing to run here. `npx prisma@7 generate` reads it, and `npx prisma@7 migrate dev` turns changes to it into SQL.
+
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  // The repo imports with .ts specifiers (allowImportingTsExtensions), so the generated files must too.
+  generatedFileExtension = "ts"
+  importFileExtension    = "ts"
+  moduleFormat           = "esm"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// The three statuses M05 validates in TypeScript and M06 enforces with a CHECK constraint. On SQLite
+// Prisma stores an enum as plain TEXT with no CHECK, so here Prisma enforces it and the database does not.
+enum TaskStatus {
+  todo
+  in_progress
+  done
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  tasks     Task[]
+}
+
+// Task keeps a UUID string id, because the M05 API contract and the Bruno collection already use one.
+model Task {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  status      TaskStatus @default(todo)
+  // 1 (high) to 3 (low). The default means existing rows get 2 when this column is added.
+  priority    Int        @default(2)
+  dueDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  // Every task has exactly one owner. Deleting the owner deletes their tasks, as in the M06 schema.
+  userId      Int
+  owner       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Implicit many-to-many: Prisma creates and manages the _TagToTask join table.
+  tags        Tag[]
+
+  @@index([status])
+  @@index([userId])
+}
+
+model Tag {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  tasks Task[]
+}
