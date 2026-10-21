@@ -1,5 +1,7 @@
 # node-js-foundation-training
 
+[![CI](https://github.com/kiannaalexandra-gragg/node-js-foundation-training/actions/workflows/ci.yml/badge.svg)](https://github.com/kiannaalexandra-gragg/node-js-foundation-training/actions/workflows/ci.yml)
+
 My hands-on builds for the Node.js Developer Training Program, stages M01 to M10.
 
 ## How this repo relates to `node-js-training-rnd`
@@ -24,11 +26,13 @@ one project that grows across four stages, so it lives in a single top-level `ta
 ```text
 .
 ├─ .nvmrc                 # Node version for the cohort
+├─ .github/workflows/     # ci.yml: install, generate, type-check, test (M09)
 ├─ modules/
 │  └─ mNN-<name>/         # standalone stages: M01-M04 and M06, e.g. m01-dev-environment-git-github
 └─ task-api/              # the Task API, M05 to M09, one project that grows
    ├─ src/                # app.ts, server.ts, config.ts, db.ts, errors.ts, middleware/, routes/, services/, ...
    ├─ prisma/             # schema.prisma, migrations/, seed.ts (M07 onward)
+   ├─ tests/              # Jest + Supertest integration tests (M09)
    ├─ bruno/              # Bruno collection (plain text)
    ├─ package.json, tsconfig.json
    └─ .env.example, README.md
