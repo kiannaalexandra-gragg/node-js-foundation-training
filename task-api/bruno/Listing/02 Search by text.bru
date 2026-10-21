@@ -1,0 +1,30 @@
+meta {
+  name: 02 Search by text
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks?q=ZEBRA
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isArray
+}
+
+tests {
+  // The search text is upper case on purpose: the title is lower case, and SQLite's LIKE ignores case.
+  test("finds the task by its title, whatever the case", function () {
+    expect(res.body.data.map((task) => task.id)).to.include(bru.getVar("listingId"));
+  });
+
+  test("every task returned contains the text in its title or description", function () {
+    res.body.data.forEach((task) => {
+      const text = `${task.title} ${task.description ?? ""}`.toLowerCase();
+      expect(text).to.include("zebra");
+    });
+  });
+}

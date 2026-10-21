@@ -12,12 +12,12 @@ get {
 
 assert {
   res.status: eq 200
-  res.body: isArray
+  res.body.data: isArray
 }
 
 tests {
   test("returns only tasks with status todo", function () {
-    expect(res.body).to.not.be.empty;
-    res.body.forEach((task) => expect(task.status).to.equal("todo"));
+    expect(res.body.data).to.not.be.empty;
+    res.body.data.forEach((task) => expect(task.status).to.equal("todo"));
   });
 }

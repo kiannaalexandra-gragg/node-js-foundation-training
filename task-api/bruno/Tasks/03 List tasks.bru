@@ -12,11 +12,19 @@ get {
 
 assert {
   res.status: eq 200
-  res.body: isArray
+  res.body.data: isArray
+  res.body.meta.page: eq 1
+  res.body.meta.pageSize: eq 20
 }
 
 tests {
+  // The default order is newest first, so the task created in step 02 is on the first page.
   test("includes the task just created", function () {
-    expect(res.body.map((task) => task.id)).to.include(bru.getVar("taskId"));
+    expect(res.body.data.map((task) => task.id)).to.include(bru.getVar("taskId"));
+  });
+
+  test("meta describes the whole result, not just this page", function () {
+    expect(res.body.meta.total).to.be.at.least(res.body.data.length);
+    expect(res.body.meta.totalPages).to.equal(Math.ceil(res.body.meta.total / res.body.meta.pageSize));
   });
 }
