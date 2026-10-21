@@ -1,7 +1,8 @@
-// Module 5 output, extended in Module 7 with Prisma error codes: the central error handler.
+// Module 5 output, extended in Module 7 with Prisma error codes and in Module 8 with ZodError: the central error handler.
 // Nothing to run here. Registered last in app.ts. Success: every error response has the fixed envelope, and `npm run bruno` passes.
 import type { NextFunction, Request, Response } from 'express';
-import { AppError, ConflictError, NotFoundError } from '../errors.ts';
+import { ZodError } from 'zod';
+import { AppError, ConflictError, NotFoundError, ValidationError, type ErrorDetail } from '../errors.ts';
 import { Prisma } from '../generated/prisma/client.ts';
 import { requestIdOf } from './request-id.ts';
 
@@ -66,10 +67,28 @@ function prismaErrorToAppError(err: Prisma.PrismaClientKnownRequestError): AppEr
   }
 }
 
+// A ZodError lists every rule that failed, each with a `path` (an array of keys). The envelope's
+// `details` is one { path, message } per field, so the path becomes dotted text ('title'), and
+// the first message for a field wins. Zod can report one field twice: a priority of 1e300 is
+// both outside the safe integer range and above the maximum, and the client has one problem. An issue with no path is about the body as a whole (not an object, or no field
+// sent), and the envelope has always called that path 'body'.
+function zodErrorToDetails(err: ZodError): ErrorDetail[] {
+  const seen = new Set<string>();
+  const details: ErrorDetail[] = [];
+  for (const issue of err.issues) {
+    const path = issue.path.length === 0 ? 'body' : issue.path.join('.');
+    if (seen.has(path)) continue;
+    seen.add(path);
+    details.push({ path, message: issue.message });
+  }
+  return details;
+}
+
 // Turns anything thrown into an AppError. Known client errors keep their meaning. Everything else
 // is a programmer error and becomes a generic 500 whose message says nothing about the cause.
 function toAppError(err: unknown): AppError {
   if (err instanceof AppError) return err;
+  if (err instanceof ZodError) return new ValidationError(zodErrorToDetails(err));
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     const mapped = prismaErrorToAppError(err);
     if (mapped !== undefined) return mapped;
