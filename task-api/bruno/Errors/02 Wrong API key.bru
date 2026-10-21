@@ -1,0 +1,20 @@
+meta {
+  name: 02 Wrong API key
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+  res.body.error.code: eq UNAUTHORIZED
+}
+
+script:pre-request {
+  req.setHeader("x-api-key", "not-the-key");
+}

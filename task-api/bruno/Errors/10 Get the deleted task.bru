@@ -1,0 +1,16 @@
+meta {
+  name: 10 Get the deleted task
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks/{{taskId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+  res.body.error.code: eq NOT_FOUND
+}

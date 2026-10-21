@@ -1,0 +1,28 @@
+meta {
+  name: 04 Create without a title
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tasks
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "description": "no title here"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq VALIDATION_ERROR
+}
+
+tests {
+  test("reports title as Required", function () {
+    expect(res.body.error.details).to.eql([{ path: "title", message: "Required" }]);
+  });
+}

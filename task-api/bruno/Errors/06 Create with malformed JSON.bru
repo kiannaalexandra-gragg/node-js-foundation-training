@@ -1,0 +1,30 @@
+meta {
+  name: 06 Create with malformed JSON
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tasks
+  body: text
+  auth: none
+}
+
+headers {
+  content-type: application/json
+}
+
+body:text {
+  {bad
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq BAD_REQUEST
+}
+
+tests {
+  test("is not a validation error, so it has no details", function () {
+    expect(res.body.error.message).to.equal("Request body is not valid JSON");
+  });
+}

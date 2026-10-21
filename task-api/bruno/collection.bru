@@ -1,0 +1,33 @@
+headers {
+  x-api-key: {{apiKey}}
+}
+
+tests {
+  // Runs after every request in the collection. Any error response, from any endpoint, must use
+  // the fixed envelope, and its requestId must be the one the server put in the X-Request-Id header.
+  if (res.status >= 400) {
+    test("error response uses the fixed envelope", function () {
+      const error = res.body.error;
+      expect(Object.keys(res.body)).to.eql(["error"]);
+      // Exactly these keys: no stack trace or other internals can ride along.
+      const allowed = error.code === "VALIDATION_ERROR"
+        ? ["code", "message", "details", "requestId"]
+        : ["code", "message", "requestId"];
+      expect(Object.keys(error)).to.eql(allowed);
+      expect(error.code).to.be.a("string").and.not.equal("");
+      expect(error.message).to.be.a("string").and.not.equal("");
+      expect(error.requestId).to.be.a("string").and.equal(res.headers["x-request-id"]);
+      if (error.code === "VALIDATION_ERROR") {
+        expect(error.details).to.be.an("array").that.is.not.empty;
+      } else {
+        expect(error).to.not.have.property("details");
+      }
+    });
+  }
+}
+
+docs {
+  Module 5 output: the Bruno collection for Task API v1.
+  Run from task-api/ with the server running: npm run bruno
+  Success: Status PASS, every request passed. Tasks/ is the happy path, in order. Errors/ has one request per error path.
+}

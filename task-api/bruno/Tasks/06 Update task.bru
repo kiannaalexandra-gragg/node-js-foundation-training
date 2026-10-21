@@ -1,0 +1,30 @@
+meta {
+  name: 06 Update task
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/tasks/{{taskId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "status": "in_progress"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{taskId}}
+  res.body.status: eq in_progress
+}
+
+tests {
+  test("leaves the fields that were not sent unchanged", function () {
+    expect(res.body.title).to.equal("Write the Bruno collection");
+    expect(res.body.description).to.equal("One request per endpoint");
+  });
+}

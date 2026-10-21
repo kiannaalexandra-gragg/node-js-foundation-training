@@ -1,0 +1,23 @@
+meta {
+  name: 04 List tasks filtered by status
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks?status=todo
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}
+
+tests {
+  test("returns only tasks with status todo", function () {
+    expect(res.body).to.not.be.empty;
+    res.body.forEach((task) => expect(task.status).to.equal("todo"));
+  });
+}

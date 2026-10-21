@@ -1,0 +1,20 @@
+meta {
+  name: 01 Missing API key
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+  res.body.error.code: eq UNAUTHORIZED
+}
+
+script:pre-request {
+  req.deleteHeader("x-api-key");
+}

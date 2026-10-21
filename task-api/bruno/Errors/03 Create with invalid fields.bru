@@ -1,0 +1,35 @@
+meta {
+  name: 03 Create with invalid fields
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tasks
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "",
+    "description": 5,
+    "status": "nope"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq VALIDATION_ERROR
+}
+
+tests {
+  test("lists every failing field, in details", function () {
+    expect(res.body.error.message).to.equal("Request validation failed");
+    expect(res.body.error.details).to.eql([
+      { path: "title", message: "Must not be empty" },
+      { path: "description", message: "Must be a string" },
+      { path: "status", message: "Must be one of: todo, in_progress, done" },
+    ]);
+  });
+}

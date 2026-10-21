@@ -1,0 +1,22 @@
+meta {
+  name: 05 Create without a body
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tasks
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq VALIDATION_ERROR
+}
+
+tests {
+  test("reports the missing body (req.body is undefined in Express 5)", function () {
+    expect(res.body.error.details).to.eql([{ path: "body", message: "Must be a JSON object" }]);
+  });
+}

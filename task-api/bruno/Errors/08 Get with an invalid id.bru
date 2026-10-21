@@ -1,0 +1,22 @@
+meta {
+  name: 08 Get with an invalid id
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks/not-a-uuid
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq VALIDATION_ERROR
+}
+
+tests {
+  test("reports the id as invalid", function () {
+    expect(res.body.error.details).to.eql([{ path: "id", message: "Must be a valid UUID" }]);
+  });
+}
