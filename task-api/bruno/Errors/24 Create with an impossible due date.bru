@@ -1,0 +1,32 @@
+meta {
+  name: 24 Create with an impossible due date
+  type: http
+  seq: 24
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tasks
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Impossible date",
+    "dueDate": "2026-02-30"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq VALIDATION_ERROR
+}
+
+tests {
+  // new Date("2026-02-30") quietly becomes 2 March, so the date is checked against the calendar.
+  test("rejects a day that does not exist instead of rolling it over", function () {
+    expect(res.body.error.details).to.eql([
+      { path: "dueDate", message: "Must be an ISO 8601 date such as 2026-12-31, or null" },
+    ]);
+  });
+}

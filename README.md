@@ -27,7 +27,8 @@ one project that grows across four stages, so it lives in a single top-level `ta
 ├─ modules/
 │  └─ mNN-<name>/         # standalone stages: M01-M04 and M06, e.g. m01-dev-environment-git-github
 └─ task-api/              # the Task API, M05 to M09, one project that grows
-   ├─ src/                # app.ts, server.ts, config.ts, errors.ts, middleware/, routes/, ...
+   ├─ src/                # app.ts, server.ts, config.ts, db.ts, errors.ts, middleware/, routes/, services/, ...
+   ├─ prisma/             # schema.prisma, migrations/, seed.ts (M07 onward)
    ├─ bruno/              # Bruno collection (plain text)
    ├─ package.json, tsconfig.json
    └─ .env.example, README.md

@@ -1,0 +1,25 @@
+meta {
+  name: 23 List with a bad page and page size
+  type: http
+  seq: 23
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks?page=0&pageSize=1000
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq VALIDATION_ERROR
+}
+
+tests {
+  test("lists every bad parameter, and does not cap or ignore them", function () {
+    expect(res.body.error.details).to.eql([
+      { path: "page", message: "Must be a whole number of 1 or more" },
+      { path: "pageSize", message: "Must be a whole number from 1 to 100" },
+    ]);
+  });
+}

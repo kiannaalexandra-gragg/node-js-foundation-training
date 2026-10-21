@@ -1,0 +1,29 @@
+meta {
+  name: 03 Sort by priority
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks?sortBy=priority&order=asc&pageSize=100
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isArray
+}
+
+tests {
+  test("priorities never go down from one task to the next", function () {
+    const priorities = res.body.data.map((task) => task.priority);
+    expect(priorities).to.eql([...priorities].sort((a, b) => a - b));
+    // The task from step 01 has priority 1, the highest, so it sorts to the front.
+    expect(priorities[0]).to.equal(1);
+  });
+
+  test("the task from step 01 is on the page", function () {
+    expect(res.body.data.map((task) => task.id)).to.include(bru.getVar("listingId"));
+  });
+}

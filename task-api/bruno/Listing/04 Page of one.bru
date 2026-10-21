@@ -1,0 +1,26 @@
+meta {
+  name: 04 Page of one
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks?pageSize=1
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.meta.page: eq 1
+  res.body.meta.pageSize: eq 1
+}
+
+tests {
+  test("returns one task, and meta counts every task", function () {
+    expect(res.body.data).to.have.lengthOf(1);
+    expect(res.body.meta.total).to.be.at.least(1);
+    // With one task per page there is one page per task.
+    expect(res.body.meta.totalPages).to.equal(res.body.meta.total);
+  });
+}

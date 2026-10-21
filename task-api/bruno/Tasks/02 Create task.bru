@@ -21,12 +21,25 @@ assert {
   res.status: eq 201
   res.body.title: eq Write the Bruno collection
   res.body.status: eq todo
+  res.body.priority: eq 2
 }
 
 tests {
-  test("returns the task with a server-made id and only the contract fields", function () {
+  test("returns the task with a server-made id and the v2 fields", function () {
     expect(res.body.id).to.be.a("string");
-    expect(Object.keys(res.body).sort()).to.eql(["description", "id", "status", "title"]);
+    // v2 adds priority, dueDate, createdAt, updatedAt and userId to the four v1 fields.
+    expect(Object.keys(res.body).sort()).to.eql([
+      "createdAt",
+      "description",
+      "dueDate",
+      "id",
+      "priority",
+      "status",
+      "title",
+      "updatedAt",
+      "userId",
+    ]);
+    expect(res.body.dueDate).to.equal(null);
   });
 }
 
