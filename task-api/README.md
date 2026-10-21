@@ -8,6 +8,12 @@ integration tests (v4, M09).
 **Current version: v2.** Tasks live in a SQLite file (`dev.db`), so they survive a restart. The v1
 in-memory store is gone.
 
+**"v2" names the project iteration, not the URL.** Every endpoint stays under `/api/v1`, as the M05
+brief fixes it, and the later stages (v3 and v4) keep it too. v2 does change the response of
+`GET /api/v1/tasks` from an array to `{ data, meta }` and adds fields to a task. That is a breaking change
+for any client written against v1, and it is accepted here because this API has no clients besides its own
+Bruno collection. A real API with clients would put a change like this under a new URL version.
+
 ## Setup
 
 ```bash
