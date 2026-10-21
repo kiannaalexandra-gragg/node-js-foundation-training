@@ -1,0 +1,25 @@
+meta {
+  name: 04 Update to the last second of year 9999
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/tasks/{{dateId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  { "dueDate": "9999-12-31T23:59:59Z" }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("stores the due date as 9999-12-31T23:59:59.000Z", function () {
+    expect(res.body.dueDate).to.equal("9999-12-31T23:59:59.000Z");
+  });
+}

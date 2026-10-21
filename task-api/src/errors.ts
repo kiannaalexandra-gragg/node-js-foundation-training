@@ -1,5 +1,5 @@
 // Module 5 output: the AppError hierarchy.
-// Nothing to run here. Handlers and validation throw these, and middleware/error-handler.ts turns them into the error envelope.
+// Nothing to run here. Handlers and the service throw these, and middleware/error-handler.ts turns them into the error envelope. It also builds a ValidationError itself from a ZodError (Module 8).
 
 // The AppError hierarchy. Every error the API means to send to a client is an AppError: it
 // carries its own HTTP status and a stable, machine-readable code, so the central error handler

@@ -1,15 +1,10 @@
-// Module 7 output: the task service, the Prisma-backed replacement for the M05 in-memory store.
+// Module 7 output, input types from Zod in Module 8: the task service, the Prisma-backed replacement for the M05 in-memory store.
 // Nothing to run here. Used by the handlers. Success: tasks survive a server restart, and `npm run bruno` passes.
 import { NotFoundError } from '../errors.ts';
 import { prisma } from '../db.ts';
 import type { Prisma } from '../generated/prisma/client.ts';
-import type {
-  CreateTaskInput,
-  ListTasksQuery,
-  Task,
-  TaskPage,
-  UpdateTaskInput,
-} from '../types/task.ts';
+import type { CreateTaskInput, ListTasksQuery, UpdateTaskInput } from '../schemas/task.schemas.ts';
+import type { Task, TaskPage } from '../types/task.ts';
 
 // The service holds every database call for tasks, so handlers know nothing about Prisma and a
 // change to the data layer stays in this file. It keeps the shape of the M05 store (list, get,
@@ -61,13 +56,19 @@ export const taskService = {
     if (owner === null) {
       throw new Error(`Default owner ${DEFAULT_OWNER_EMAIL} is missing: run the migrations`);
     }
-    return prisma.task.create({ data: { ...input, userId: owner.id } });
+    // Zod is the request contract and Prisma's types are the persistence contract. `satisfies` makes the
+    // compiler check the one against the other: if a schema ever produces a field or a type that Prisma
+    // cannot store, this line stops compiling. The unchecked variant is the one that takes `userId`
+    // directly. The input is never raw `req.body`: it is what the create schema produced.
+    const data = { ...input, userId: owner.id } satisfies Prisma.TaskUncheckedCreateInput;
+    return prisma.task.create({ data });
   },
 
   // update and remove do not look the task up first. Prisma throws a P2025 error when the row does
   // not exist, and the central error handler turns that into the same 404 the handlers used to throw.
   async update(id: string, patch: UpdateTaskInput): Promise<Task> {
-    return prisma.task.update({ where: { id }, data: patch });
+    const data = patch satisfies Prisma.TaskUpdateInput;
+    return prisma.task.update({ where: { id }, data });
   },
 
   async remove(id: string): Promise<void> {

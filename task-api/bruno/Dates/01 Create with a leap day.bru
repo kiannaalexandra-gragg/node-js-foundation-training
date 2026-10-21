@@ -1,0 +1,29 @@
+meta {
+  name: 01 Create with a leap day
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tasks
+  body: json
+  auth: none
+}
+
+body:json {
+  { "title": "Date boundaries", "dueDate": "2028-02-29" }
+}
+
+assert {
+  res.status: eq 201
+}
+
+tests {
+  test("stores the due date as 2028-02-29T00:00:00.000Z", function () {
+    expect(res.body.dueDate).to.equal("2028-02-29T00:00:00.000Z");
+  });
+}
+
+vars:post-response {
+  dateId: res.body.id
+}

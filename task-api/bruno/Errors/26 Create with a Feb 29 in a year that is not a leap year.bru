@@ -1,0 +1,32 @@
+meta {
+  name: 26 Create with a Feb 29 in a year that is not a leap year
+  type: http
+  seq: 26
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tasks
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Not a leap year",
+    "dueDate": "2026-02-29"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq VALIDATION_ERROR
+}
+
+tests {
+  // 2026 is not a leap year, so 29 February does not exist. Errors/24 covers 30 February.
+  test("rejects the date and names dueDate", function () {
+    expect(res.body.error.details).to.eql([
+      { path: "dueDate", message: "Must be an ISO 8601 date such as 2026-12-31, or null" },
+    ]);
+  });
+}

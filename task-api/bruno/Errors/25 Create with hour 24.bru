@@ -1,0 +1,32 @@
+meta {
+  name: 25 Create with hour 24
+  type: http
+  seq: 25
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tasks
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Hour 24",
+    "dueDate": "2026-01-01T24:00:00Z"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq VALIDATION_ERROR
+}
+
+tests {
+  // Hour 24 (end of day) is not accepted: an hour is 00 to 23. v2 accepted it and stored the next day.
+  test("rejects the date and names dueDate", function () {
+    expect(res.body.error.details).to.eql([
+      { path: "dueDate", message: "Must be an ISO 8601 date such as 2026-12-31, or null" },
+    ]);
+  });
+}
