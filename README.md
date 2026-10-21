@@ -17,16 +17,42 @@ A "module" in both repos is a training stage, not a JavaScript module.
 
 ## Layout
 
-Each stage has a folder under `modules/`, named exactly like its folder in `node-js-training-rnd`.
+There are two kinds of folder. Most stages are standalone, so each has its own folder under
+`modules/`, named exactly like its folder in `node-js-training-rnd`. The Task API is the exception:
+one project that grows across four stages, so it lives in a single top-level `task-api/` folder.
 
 ```text
 .
 ├─ .nvmrc                 # Node version for the cohort
-└─ modules/
-   └─ mNN-<name>/         # one folder per stage, e.g. m01-dev-environment-git-github
+├─ modules/
+│  └─ mNN-<name>/         # standalone stages: M01-M04 and M06, e.g. m01-dev-environment-git-github
+└─ task-api/              # the Task API, M05 to M09, one project that grows
+   ├─ src/                # app.ts, server.ts, config.ts, errors.ts, middleware/, routes/, ...
+   ├─ bruno/              # Bruno collection (plain text)
+   ├─ package.json, tsconfig.json
+   └─ .env.example, README.md
 ```
 
 Stage folders are added as each stage is built.
+
+### Why the Task API is not under `modules/`
+
+M05, M07, M08 and M09 do not each build a separate program. They build one Task API, and each stage
+changes it: v1 (M05) adds routing and errors on an in-memory store, v2 (M07) adds Prisma, v3 (M08)
+adds Zod, and v4 (M09) adds tests. Four folders would mean four copies of the same `package.json`,
+lockfile and Bruno collection, and the Prisma migrations could not carry from one version to the
+next. So there is one `task-api/`, and **each version is a pull request**: the merge of
+`feat/module-05/...` is v1, the merge of the M07 branch is v2, and so on. The content side still has
+one folder per stage (`modules/m05-express-task-api-v1/` and so on), because that is where each
+stage's write-up and training material live.
+
+| Stage | Where the code is |
+| --- | --- |
+| M01-M04 | `modules/mNN-<name>/` |
+| M05 (Task API v1) | `task-api/` |
+| M06 (SQL, no API) | `modules/m06-sql-fundamentals-sqlite/` |
+| M07-M09 (Task API v2-v4) | `task-api/`, changed in place |
+| M10 (capstone) | its own project, not `task-api/` |
 
 ## Working conventions
 
