@@ -1,0 +1,21 @@
+{
+  "name": "m04-typescript-on-node",
+  "version": "1.0.0",
+  "private": true,
+  "description": "M04: the M02 async toolkit ported to strict TypeScript, plus the Task domain types",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "demo": "node --env-file-if-exists=.env --import tsx src/demo.ts",
+    "check": "tsx src/toolkit/async-toolkit.check.ts && tsx src/domain/domain.check.ts && tsx src/env.check.ts",
+    "check:native": "node src/toolkit/async-toolkit.check.ts && node src/domain/domain.check.ts && node src/env.check.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
