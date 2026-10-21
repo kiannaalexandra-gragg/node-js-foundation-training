@@ -57,9 +57,11 @@ export const taskService = {
       throw new Error(`Default owner ${DEFAULT_OWNER_EMAIL} is missing: run the migrations`);
     }
     // Zod is the request contract and Prisma's types are the persistence contract. `satisfies` makes the
-    // compiler check the one against the other: if a schema ever produces a field or a type that Prisma
-    // cannot store, this line stops compiling. The unchecked variant is the one that takes `userId`
-    // directly. The input is never raw `req.body`: it is what the create schema produced.
+    // compiler check the one against the other: if a schema ever gives a shared field a type that Prisma
+    // does not accept, or stops producing a field Prisma requires, this line stops compiling. It does not
+    // catch an extra field Prisma has no column for: excess properties are not checked on a spread. The
+    // unchecked variant is the one that takes `userId` directly. The input is never raw `req.body`: it is
+    // what the create schema produced.
     const data = { ...input, userId: owner.id } satisfies Prisma.TaskUncheckedCreateInput;
     return prisma.task.create({ data });
   },
