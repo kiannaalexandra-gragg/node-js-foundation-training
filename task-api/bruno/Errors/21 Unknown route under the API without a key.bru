@@ -1,0 +1,20 @@
+meta {
+  name: 21 Unknown route under the API without a key
+  type: http
+  seq: 21
+}
+
+get {
+  url: {{baseUrl}}/api/v1/nope
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+  res.body.error.code: eq UNAUTHORIZED
+}
+
+script:pre-request {
+  req.deleteHeader("x-api-key");
+}

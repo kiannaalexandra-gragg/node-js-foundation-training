@@ -1,0 +1,30 @@
+meta {
+  name: 13 Update with an invalid status
+  type: http
+  seq: 13
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/tasks/{{missingId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "status": "finished"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq VALIDATION_ERROR
+}
+
+tests {
+  test("rejects the status before looking the task up", function () {
+    expect(res.body.error.details).to.eql([
+      { path: "status", message: "Must be one of: todo, in_progress, done" },
+    ]);
+  });
+}

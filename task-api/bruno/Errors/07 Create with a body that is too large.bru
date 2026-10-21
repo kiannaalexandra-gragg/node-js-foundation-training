@@ -1,0 +1,24 @@
+meta {
+  name: 07 Create with a body that is too large
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tasks
+  body: json
+  auth: none
+}
+
+body:json {
+  {}
+}
+
+assert {
+  res.status: eq 413
+  res.body.error.code: eq PAYLOAD_TOO_LARGE
+}
+
+script:pre-request {
+  req.setBody({ title: "x".repeat(200 * 1024) });
+}

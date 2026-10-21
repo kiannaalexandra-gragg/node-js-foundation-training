@@ -1,0 +1,16 @@
+meta {
+  name: 14 Delete an unknown task
+  type: http
+  seq: 14
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/tasks/{{missingId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+  res.body.error.code: eq NOT_FOUND
+}

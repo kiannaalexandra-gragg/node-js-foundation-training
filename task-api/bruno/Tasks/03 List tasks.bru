@@ -1,0 +1,22 @@
+meta {
+  name: 03 List tasks
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}
+
+tests {
+  test("includes the task just created", function () {
+    expect(res.body.map((task) => task.id)).to.include(bru.getVar("taskId"));
+  });
+}

@@ -1,0 +1,15 @@
+meta {
+  name: 07 Delete task
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/tasks/{{taskId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}

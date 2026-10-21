@@ -1,0 +1,28 @@
+meta {
+  name: 12 Update with an empty body
+  type: http
+  seq: 12
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/tasks/{{taskId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {}
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq VALIDATION_ERROR
+}
+
+tests {
+  test("asks for at least one field", function () {
+    expect(res.body.error.details).to.eql([
+      { path: "body", message: "At least one of title, description, status is required" },
+    ]);
+  });
+}

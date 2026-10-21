@@ -1,0 +1,22 @@
+meta {
+  name: 20 Get with a malformed percent-encoding
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks/%E0%A4%A
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq BAD_REQUEST
+}
+
+tests {
+  test("is a client error, not a 500", function () {
+    expect(res.body.error.message).to.equal("Bad request");
+  });
+}

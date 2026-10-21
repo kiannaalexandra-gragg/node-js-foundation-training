@@ -1,0 +1,16 @@
+meta {
+  name: 05 Get task
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tasks/{{taskId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{taskId}}
+}
