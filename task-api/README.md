@@ -1,16 +1,18 @@
 # Task API
 
+[![CI](https://github.com/kiannaalexandra-gragg/node-js-foundation-training/actions/workflows/ci.yml/badge.svg)](https://github.com/kiannaalexandra-gragg/node-js-foundation-training/actions/workflows/ci.yml)
+
 An Express 5 REST API in TypeScript. It is built up across the program: **v1 (M05)** is an in-memory
 API with routing, middleware and one consistent error model. **v2 (M07)** stores tasks in SQLite
-through Prisma 7. **v3 (M08)** validates every request and the environment with Zod 4. A later
-stage changes this same project in place: integration tests (v4, M09).
+through Prisma 7. **v3 (M08)** validates every request and the environment with Zod 4. **v4 (M09)**
+adds integration tests with Jest 30 and Supertest 7, a CI workflow, and `PATCH /api/v1/tasks/:id/complete`.
 
-**Current version: v3.** Tasks live in a SQLite file (`dev.db`), so they survive a restart. The v1
+**Current version: v4.** Tasks live in a SQLite file (`dev.db`), so they survive a restart. The v1
 in-memory store is gone, and so is the hand-written validation: every body, `:id` and query string is
 checked by a Zod schema before a handler runs (see [Validation](#validation)).
 
-**"v3" names the project iteration, not the URL.** Every endpoint stays under `/api/v1`, as the M05
-brief fixes it, and the later stage (v4) keeps it too. v2 changed the response of
+**"v4" names the project iteration, not the URL.** Every endpoint stays under `/api/v1`, as the M05
+brief fixes it, and every later version keeps it too. v2 changed the response of
 `GET /api/v1/tasks` from an array to `{ data, meta }` and adds fields to a task. That is a breaking change
 for any client written against v1, and it is accepted here because this API has no clients besides its own
 Bruno collection. A real API with clients would put a change like this under a new URL version.
@@ -25,6 +27,7 @@ cp .env.example .env         # the values in the example file are fake; API_KEY 
 npm run db:generate          # builds the Prisma client into src/generated/prisma (git-ignored, so every fresh clone needs this)
 npm run db:deploy            # creates dev.db and applies every migration
 npm run db:seed              # loads the sample data (24 tasks, 7 tags, 5 users plus the default owner)
+cp .env.test.example .env.test   # the settings for the tests (see Testing); only needed to run npm test
 npm run dev                  # restarts on change; use npm start for a plain run
 ```
 
@@ -39,6 +42,9 @@ then `npm run db:seed`, because a reset does not run the seed.
 | `npm run dev` | `tsx watch` on `src/server.ts`, loads `.env` |
 | `npm start` | `tsx` on `src/server.ts`, loads `.env` |
 | `npm run typecheck` | `tsc --noEmit`, strict |
+| `npm test` | Jest in ESM mode with `--runInBand`: gives the run its own database and migrates it, then runs every file in `tests/`. Needs `.env.test` (see [Testing](#testing)). |
+| `npm run test:coverage` | `npm test` with a coverage report on routes, handlers and services, and a failure under 80% |
+| `npm run test:random` | `npm test -- --randomize`: the tests in a random order, with the seed printed. Re-run a failure with `npm test -- --randomize --seed=<seed>`. |
 | `npm run db:generate` | `prisma generate`: builds the typed client from `prisma/schema.prisma` |
 | `npm run db:migrate` | `prisma migrate dev`: creates a migration from schema changes and applies it. Development only. Add `-- --name <name>` to name it, or `-- --create-only` to write it without applying it. |
 | `npm run db:deploy` | `prisma migrate deploy`: applies the committed migrations, creates none. For CI and production. `prisma` is a dev dependency, so the install step that runs it must not omit dev dependencies (no `--omit=dev`). |
@@ -75,6 +81,7 @@ request that touches the database fails with a 500.
 | `POST /api/v1/tasks` | key | 201, the task | `title` required |
 | `GET /api/v1/tasks/:id` | key | 200, the task | |
 | `PATCH /api/v1/tasks/:id` | key | 200, the updated task | At least one field |
+| `PATCH /api/v1/tasks/:id/complete` | key | 200, the updated task | Sets `status` to `done`, no body needed. Completing a task that is already done is a 200 again. |
 | `DELETE /api/v1/tasks/:id` | key | 204, no body | |
 
 Everything under `/api/v1` needs the header `X-API-Key: <your API_KEY>`. A missing or wrong key is a
@@ -208,14 +215,47 @@ task-api/
 │  ├─ migrations/               one folder per migration, committed
 │  └─ seed.ts                   the sample data
 ├─ scripts/                     check-prisma-errors.ts
-├─ bruno/                       the Bruno collection, plain text (Tasks, Errors, Listing, and Dates for due-date boundaries)
+├─ tests/                       the Jest integration tests, global-setup.ts and global-teardown.ts, and helpers/ (database rules, cleanup, factories, Supertest agent)
+├─ bruno/                       the Bruno collection, plain text (Tasks, Errors, Listing, Dates for due-date boundaries, Complete)
+├─ jest.config.js               Jest: ESM, @swc/jest transform, coverage on routes, handlers and services
 ├─ prisma7.config.ts            Prisma CLI config: schema path, migrations path, seed command, database URL
 ├─ .env.example
+├─ .env.test.example            copy to .env.test for the tests (git-ignored)
 ├─ package.json
 └─ tsconfig.json
 ```
 
-`tests/` and `jest.config.js` are added in M09, when something uses them.
+The CI workflow is `.github/workflows/ci.yml` at the root of the repo, not in this folder, because GitHub only
+reads workflows from there.
+
+## Testing
+
+`npm test` runs the integration tests in `tests/`. They call the real exported Express app with Supertest
+(no port is opened) and a real SQLite database: nothing in the data layer is mocked.
+
+- **Settings:** copy `.env.test.example` to `.env.test`. It holds a fake `API_KEY` and
+  `DATABASE_URL=file:./test.db`. `.env.test` is git-ignored. In CI the workflow sets the same variables.
+- **One database per run:** `tests/global-setup.ts` loads `.env.test`, turns `test.db` into a file just for this
+  run (`test-<process id>-<time>.db`), runs `prisma migrate deploy` on it, and sets `DATABASE_URL` to it for
+  every test file. `tests/global-teardown.ts` deletes it when the run ends. A run that is killed can leave its
+  file behind: it is git-ignored and safe to delete.
+- **Never touches `dev.db`:** the database name must be a `file:` URL whose file starts with `test` and ends
+  in `.db` (`tests/helpers/test-database.ts`, checked on the resolved path, so `file:./dev.db?x=/test.db` and
+  `file:./test.db/../dev.db` are both refused). It is checked in the setup and again in `resetDb()`, before
+  anything is deleted.
+- **Isolation:** `resetDb()` runs in `beforeEach` of every test file. It deletes tasks, then tags, then
+  users other than the default owner. Tests build their rows with the factories in `tests/helpers/`.
+- **One writer, one file at a time:** SQLite allows one writer at a time, so the `test` script uses
+  `--runInBand`. Each run has its own database, so two runs at the same time do not wipe each other's rows.
+  That was not always so: with one shared `test.db`, a second test process (another terminal, an editor's test
+  runner) made the first fail with counts and lists that were wrong. A run is only isolated from other runs
+  because its database is its own, so do not point `DATABASE_URL` at a fixed file by hand.
+- **Order:** the suite passes with `npm run test:random`. If it ever does not, that is an ordering dependency
+  in a test or its setup: fix it, do not drop the flag.
+- **Coverage:** `npm run test:coverage` measures `src/routes`, `src/handlers` and `src/services`.
+- **Types:** Jest only strips types (`@swc/jest`). `npm run typecheck` checks them, and it includes `tests/`.
+- **Node 24:** `better-sqlite3` is built for one Node version. On another one every database test fails with
+  "compiled against a different Node.js version". Run `nvm use` first.
 
 ## Migrations
 

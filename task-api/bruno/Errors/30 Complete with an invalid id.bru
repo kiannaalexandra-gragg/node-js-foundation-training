@@ -1,0 +1,16 @@
+meta {
+  name: 30 Complete with an invalid id
+  type: http
+  seq: 30
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/tasks/not-a-uuid/complete
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+  res.body.error.code: eq VALIDATION_ERROR
+}

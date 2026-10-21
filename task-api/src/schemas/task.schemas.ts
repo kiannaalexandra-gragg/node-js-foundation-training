@@ -1,4 +1,4 @@
-// Module 8 output: the Zod schemas for every request the Task API accepts, and the types derived from them.
+// Module 8 output, completeTaskRequest added in Module 9: the Zod schemas for every request the Task API accepts, and the types derived from them.
 // Nothing to run here. Used by routes/tasks.routes.ts (through validate) and by the handlers and the task service for their types. Success: `npm run typecheck` exits 0.
 import { z } from 'zod';
 import { TaskStatus } from '../generated/prisma/enums.ts';
@@ -133,6 +133,7 @@ export const createTaskRequest = { body: createTaskBody };
 export const getTaskRequest = { params: taskParams };
 export const updateTaskRequest = { params: taskParams, body: updateTaskBody };
 export const deleteTaskRequest = { params: taskParams };
+export const completeTaskRequest = { params: taskParams };
 
 // --- Derived types --------------------------------------------------------------------------------
 

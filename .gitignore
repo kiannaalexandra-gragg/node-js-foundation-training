@@ -5,8 +5,11 @@ node_modules/
 .env
 .env.test
 
-# SQLite database files
+# SQLite database files, and the journal files SQLite leaves beside one while it writes (or after a crash)
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
 
 # Generated Prisma client (generated in src/generated/prisma/, so match at any depth)
 **/generated/prisma

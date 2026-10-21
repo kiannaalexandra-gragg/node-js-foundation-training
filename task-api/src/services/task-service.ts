@@ -1,4 +1,4 @@
-// Module 7 output, input types from Zod in Module 8: the task service, the Prisma-backed replacement for the M05 in-memory store.
+// Module 7 output, input types from Zod in Module 8, complete() in Module 9: the task service, the Prisma-backed replacement for the M05 in-memory store.
 // Nothing to run here. Used by the handlers. Success: tasks survive a server restart, and `npm run bruno` passes.
 import { NotFoundError } from '../errors.ts';
 import { prisma } from '../db.ts';
@@ -57,9 +57,11 @@ export const taskService = {
       throw new Error(`Default owner ${DEFAULT_OWNER_EMAIL} is missing: run the migrations`);
     }
     // Zod is the request contract and Prisma's types are the persistence contract. `satisfies` makes the
-    // compiler check the one against the other: if a schema ever produces a field or a type that Prisma
-    // cannot store, this line stops compiling. The unchecked variant is the one that takes `userId`
-    // directly. The input is never raw `req.body`: it is what the create schema produced.
+    // compiler check the one against the other: if a schema ever gives a shared field a type that Prisma
+    // does not accept, or stops producing a field Prisma requires, this line stops compiling. It does not
+    // catch an extra field Prisma has no column for: excess properties are not checked on a spread. The
+    // unchecked variant is the one that takes `userId` directly. The input is never raw `req.body`: it is
+    // what the create schema produced.
     const data = { ...input, userId: owner.id } satisfies Prisma.TaskUncheckedCreateInput;
     return prisma.task.create({ data });
   },
@@ -69,6 +71,12 @@ export const taskService = {
   async update(id: string, patch: UpdateTaskInput): Promise<Task> {
     const data = patch satisfies Prisma.TaskUpdateInput;
     return prisma.task.update({ where: { id }, data });
+  },
+
+  // Marking a task done is an update of its status, so it goes through update: one place writes a task,
+  // and an id that does not exist is the same P2025 and the same 404.
+  async complete(id: string): Promise<Task> {
+    return taskService.update(id, { status: 'done' });
   },
 
   async remove(id: string): Promise<void> {
